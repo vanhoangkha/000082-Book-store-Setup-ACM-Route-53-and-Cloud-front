@@ -1,0 +1,57 @@
+[
+{
+	"uri": "//localhost:1313/vi/1-preparation/",
+	"title": "Chuẩn bị",
+	"tags": [],
+	"description": "",
+	"content": "Trước khi thực hiện nội dung chính của workshop này, chúng ta cần thiết lập lại ứng dụng web bằng AWS SAM.\nTải xuống mã nguồn dưới đây.\nSource code\rfcj-book-store-sam-ws5.zip\r(24397 ko)\rChạy các lệnh dưới đây. Đảm bảo rằng bạn đã cài đặt AWS CLI và SAM CLI trên máy của mình, cấu hình thông tin xác thực AWS trước khi chạy các lệnh.\nsam build sam validate sam deploy --guided Nhập nội dung sau. Để mặc định.\nStack Name []: fcj-book-store AWS Region []: us-east-1 Confirm changes before deploy [Y/n]: y Allow SAM CLI IAM role creation [Y/n]: y Disable rollback [y/N]: n Save arguments to configuration file [Y/n]: y Tải xuống mã nguồn FCJ-Serverless-Workshop về thiết bị của bạn.\nMở terminal trên máy tính của bạn trong thư mục nơi bạn muốn lưu mã nguồn. Sao chép lệnh dưới đây. git clone https://github.com/AWS-First-Cloud-Journey/FCJ-Serverless-Workshop.git cd FCJ-Serverless-Workshop Sau đó chạy các lệnh dưới đây.\nyarn yarn build Chúng ta đã hoàn thành việc xây dựng front-end. Tiếp theo, thực hiện lệnh sau để tải thư mục build lên S3.\naws s3 cp build s3://fcj-book-shop-by-myself --recursive Vậy là chúng ta đã xây dựng lại ứng dụng web.\n"
+},
+{
+	"uri": "//localhost:1313/vi/",
+	"title": "Serverless - Thiết lập trang web SSL S3 Static",
+	"tags": [],
+	"description": "",
+	"content": "Serverless - Thiết lập trang web SSL S3 Static Tổng quan Trong bài này của series, chúng ta sẽ thiết lập để ứng dụng web bảo mật hơn khi transit bằng cách sử dụng SSL Certificate. SSL Certificate cho phép lưu lượng truy cập giữa người dùng và ứng dụng web host trên S3 bucket được mã hoá khi transit (in-flight encryption).\nKiến trúc của ứng dụng web sẽ như sau: AWS Certificate Manager: quản lý SSL certificate Amazon Route 53: cung cấp domain tuỳ chỉnh Amazon CloudFront: cho phép chúng ta sử dụng SSL certificate để phục vụ web với HTTPS AWS Certificate Manager AWS Certificate Manager (ACM) xử lý các thao tác tạo và gia hạn phức tạp của các chứng chỉ và khoá SSL/TLS X.509 công khai và riêng tư để bảo vệ các trang web và ứng dụng của chúng ta. Chúng ta có thể cung cấp chứng chỉ cho các dịch vụ AWS tích hợp của mình bằng cách cung cấp chúng trực tiếp với ACM hoặc nhập chứng chỉ của bên thứ ba vào hệ thống quản lý ACM.\nAmazon Route 53 Amazon Route 53 là một dịch vụ web dành cho Hệ thống tên miền (DNS) trên đám mây. Dịch vụ này có tính sẵn sàng và khả năng mở rộng cao, được thiết kế cho nhà phát triển và doanh nghiệp một phương thức tin cậy và giúp tối ưu hiệu quả về chi phí trong việc định tuyến cho người dùng cuối (end user) cũng như các ứng dụng Internet bằng cách chuyển đổi tên miền, ví dụ như \u0026lt;www.example.com\u0026gt; sang địa chỉ IP dạng số (như 192.0.2.1).\nMột số tính năng của Amazon Route 53:\nKết nối hiệu quả yêu cầu của người dùng với cơ sở hạ tầng đang chạy trong AWS – như các phiên bản Amazon EC2, trình cân bằng tải Elastic Load Balancing hoặc kho lưu trữ Amazon S3 Định tuyến người dùng đến cơ sở hạ tầng bên ngoài AWS Cấu hình kiểm tra tình trạng của DNS nhằm định tuyến lưu lượng đến các điểm cuối đủ tiêu chuẩn Theo dõi độc lập tình trạng của ứng dụng và các điểm cuối. Một thành phần mà chúng ta sẽ dùng của Route 53 là Hosted zone - là một vùng chứa các bản ghi xác định cách định tuyến lưu lượng truy cập đến một miển các miền phụ của nó.\nAmazon CloudFront Amazon CloudFront là một dich vụ web giúp tăng tốc độ phân phối nội dung web tĩnh và động của bạn, ví dụ như các tệp .html, .js, .css, hình ảnh cho người dùng. CloudFront cung cấp nội dung trang web của chúng ta thông qua mạng lưới các trung tâm dữ liệu trên toàn thế giới được gọi là edge locations. Khi người dùng yêu cầy nội dung mà chúng ta đang phân phối bằng CloutFront, yêu cầu chuyển đến edge location mà cũng cấp độ trễ thấp nhất (time delay), vì vậy nội dung được phân phối với hiệu suất tốt nhất có thể.\nMột cách tiếp cận đơn giản để lưu trữ và cung cấp nội dung tĩnh sử dụng Amazon S3 bucket. Sử dụng S3 cùng với CloudFront là một lựa chọn để kiểm soát truy cập origin dễ dàng hạn chế quyền truy cập vào nội dung của bạn.\nNội dung Chuẩn bị Tạo miền và Hosted zone Yêu cầu chứng chỉ SSL Tạo CloudFront distribution Dọn dẹp tài nguyên "
+},
+{
+	"uri": "//localhost:1313/vi/2-create-domain-hosted-zone/",
+	"title": "Tạo miền và Hosted zone",
+	"tags": [],
+	"description": "",
+	"content": "Trong bước này, chúng ta sẽ tạo một Domain và Hosted zone với Amazon Route 53.\nViệc tạo miền sẽ tốn chi phí của bạn.\nMở Amazon Route 53.\nNếu bạn chưa sở hữu một miền, hãy làm theo bước này để đăng ký một miền mới. Tại trang điều khiển Route 53.\nNhấp vào Registered domains trên menu bên trái. Tại trang Registered domains, nhấp vào nút Register domains. Tại trang Register domains. Nhập tên miền bạn muốn tạo vào ô Search for domain, ví dụ: fcjbookshop.com. Nhấp vào nút Search. Nhấp vào Selected. Nhấp vào Proceed to checkout. Tại trang Step 1: Pricing. Bỏ chọn để tắt tự động gia hạn miền sau khi hết hạn. Nhấp vào nút Next. Tại trang Step 2: Contact information. Nhập thông tin của bạn. Cuộn xuống và nhấp vào nút Next. Tại trang Step 3: Review and submit. Cuộn xuống và chọn I have read and agree \u0026hellip;. Nhấp vào nút Submit. Nếu bạn đã sở hữu một miền, bạn có thể làm theo bước này. Tại trang điều khiển Route 53. Making Route 53 the DNS service for a domain that\u0026rsquo;s in use\nNhấp vào Hosted zones trên menu bên trái. Tại trang Hosted zones. Nhấp vào nút Create hosted zone. Tại trang Create hosted zone. Nhập tên miền của bạn vào ô Domain name. Nhấp vào nút Create hosted zone. Kiểm tra hosted zone mới của bạn. Chúng ta đã hoàn tất việc tạo hosted zone, bước tiếp theo chúng ta sẽ yêu cầu chứng chỉ SSL với AWS Certificate Manager.\n"
+},
+{
+	"uri": "//localhost:1313/vi/3-request-certification/",
+	"title": "Yêu cầu chứng chỉ SSL",
+	"tags": [],
+	"description": "",
+	"content": " Mở AWS Certificate Manager console. Khu vực yêu cầu để tạo chứng chỉ là N.Virginia (us-east-1)\nTại trang AWS Certificate Manager (ACM).\nNhấp vào Request certificate ở menu bên trái Tại trang Request certificate. Chọn Request a public certificate. Nhấn nút Next. Tại trang Request public certificate. Nhập *.chaunguyen.site. Nhấp vào Add another name to this certificate. Nhập chaunguyen.site. Giữ nguyên cấu hình mặc định, cuộn xuống và nhấn nút Request. Tại trang chứng chỉ 35bcec96-7527-4c2e-99ff-3f961c58a81d vừa tạo. Nhấn Create records in Route 53. Tại trang Create DNS records in Amazon Route 53. Chọn cả *.chaunguyen.site và chaunguyen.site. Nhấn Create records. Quay lại trang chứng chỉ 35bcec96-7527-4c2e-99ff-3f961c58a81d. Đợi một lát để AWS xác nhận tên miền của bạn, sau khi xác nhận thành công trạng thái sẽ chuyển thành Success. Chúng ta đã yêu cầu chứng chỉ SSL thành công. Chứng chỉ này sẽ được sử dụng bởi CloudFront trong bước tiếp theo.\n"
+},
+{
+	"uri": "//localhost:1313/vi/4-create-cloud-front/",
+	"title": "Tạo CloudFront distribution",
+	"tags": [],
+	"description": "",
+	"content": " Mở Amazon CloudFront console.\nTại trang CloudFront.\nClick nút Create a CloudFront distribution. Tại trang Create distribution. Chọn fcj-book-shop-by-myself.s3.us-east-1.amazonaws.com tại Origin domain. Nhập fcj-book-shop-by-myself.s3.us-east-1.amazonaws.com tại Name. Chọn Legacy access identities. Click Create new OAI. Tại popup Create new OAI. Nhập fcj-book-shop-by-myself.s3.us-east-1.amazonaws.com tại Name. Click nút Create. Tại trang Create distribution. Cuộn xuống, chọn Yes, update the bucket policy tại Bucket policy. Chọn Redirect HTTP to HTTPS tại Viewer protocol policy. Cuộn xuống, chọn Do not enable security protections tại Web Application Firewall (WAF). Cuộn xuống, click nút Add item tại Alternate domain name (CNAME). Nhập \u0026lt;www.chaunguyen.site\u0026gt;. Nhập chaunguyen.site. Chọn chứng chỉ *.chaunguyen.site (\u0026hellip;) mà bạn đã tạo trước đó. Cuộn xuống cuối trang, nhập index.html tại Default root object. Click nút Create distribution. Mở Amazon Route 53.\nClick Hosted zones ở menu bên trái. Chọn chaunguyen.site. Tại trang chaunguyen.site. Click nút Create record. Tại trang Create record. Nhập www tại Record name. Chọn A - Routes traffic to an IPv4 \u0026hellip; tại Record type. Bật Alias. Chọn Alias to CloudFront distribution. Chọn CloudFront distribution mà bạn đã tạo ở bước trước. Click nút Create records. Nhập các đường dẫn sau vào tab mới trong trình duyệt web của bạn: http://DOMAIN, http://www.DOMAIN, thay thế tất cả DOMAIN bằng tên miền của bạn. Tất cả các đường dẫn này sẽ được chuyển hướng sang đường dẫn mới, thay thế http bằng https "
+},
+{
+	"uri": "//localhost:1313/vi/5-cleanup/",
+	"title": "Dọn dẹp tài nguyên",
+	"tags": [],
+	"description": "",
+	"content": " Xóa S3 bucket.\nMở AWS S3 console Chọn fcj-book-shop-by-myself. Nhấn Empty. Nhập permanently delete. Nhấn Empty. Làm tương tự với bucket bắt đầu bằng aws-sam-cli-managed-default-. Xóa CloudFormation stacks.\nThực thi lệnh dưới đây để xóa ứng dụng AWS SAM.\nsam delete --stack-name fcj-book-store sam delete --stack-name aws-sam-cli-managed-default Nếu bạn gặp vấn đề khi xóa bằng lệnh, mở AWS Cloudformation console. Sau đó, xóa tất cả các stack liên quan đến workshop này.\nXóa CloudFront distribution\nMở Amazon CloudFront console. Chọn distribution đang hiển thị. Nhấn Disable. Nhấn Disable lần nữa. Đợi cho đến khi distribution bị vô hiệu hóa. Chọn lại distribution và nhấn Delete. Nhấn Delete lần nữa. Xóa chứng chỉ SSL.\nMở AWS Certificate Manager console Chọn chứng chỉ đã tạo. Nhấn Delete. Nhập delete. Nhấn Delete. Xóa Hosted zone\nMở Amazon Route 53 console. Nhấn vào hosted zone đã tạo. Chọn các bản ghi có type khác NS và SOA. Nhấn Delete records. Nhấn Delete. Nhấn Delete zone. Nhập delete. Nhấn Delete. "
+},
+{
+	"uri": "//localhost:1313/vi/categories/",
+	"title": "Categories",
+	"tags": [],
+	"description": "",
+	"content": ""
+},
+{
+	"uri": "//localhost:1313/vi/tags/",
+	"title": "Tags",
+	"tags": [],
+	"description": "",
+	"content": ""
+}]
